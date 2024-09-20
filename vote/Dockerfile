@@ -13,12 +13,18 @@ WORKDIR /usr/local/app
 COPY requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Define a log simulation script for simulating logs
+COPY simulate_logs.sh /usr/local/bin/simulate_logs.sh
+RUN chmod +x /usr/local/bin/simulate_logs.sh
+
 # Define a stage specifically for development, where it'll watch for
 # filesystem changes
 FROM base AS dev
 RUN pip install watchdog
 ENV FLASK_ENV=development
-CMD ["python", "app.py"]
+
+# Run both the app and the log simulation script concurrently
+CMD ["sh", "-c", "/usr/local/bin/simulate_logs.sh & python app.py"]
 
 # Define the final stage that will bundle the application for production
 FROM base AS final
@@ -29,5 +35,5 @@ COPY . .
 # Make port 80 available for links and/or publish
 EXPOSE 80
 
-# Define our command to be run when launching the container
-CMD ["gunicorn", "app:app", "-b", "0.0.0.0:80", "--log-file", "-", "--access-logfile", "-", "--workers", "4", "--keep-alive", "0"]
+# Run both gunicorn and the log simulation script concurrently
+CMD ["sh", "-c", "/usr/local/bin/simulate_logs.sh & gunicorn app:app -b 0.0.0.0:80 --log-file - --access-logfile - --workers 4 --keep-alive 0"]
