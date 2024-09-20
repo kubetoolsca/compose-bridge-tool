@@ -1,65 +1,105 @@
-# Example Voting App
+# Deploy Voting app to Kubernetes using Compose Bridge
 
 A simple distributed application running across multiple Docker containers.
 
-## Getting started
+## Prerequsiite
 
-Download [Docker Desktop](https://www.docker.com/products/docker-desktop) for Mac or Windows. [Docker Compose](https://docs.docker.com/compose) will be automatically installed. On Linux, make sure you have the latest version of [Compose](https://docs.docker.com/compose/install/).
+- Docker Desktop
+- Enable Compose Bridge
+- Enable Kubernetes
 
-This solution uses Python, Node.js, .NET, with Redis for messaging and Postgres for storage.
+## Getting Started
 
-Run in this directory to build and run the app:
+## Clone the repo
 
-```shell
-docker compose up
+```
+git clone https://github.com/kubetoolsca/sample-voting-app
 ```
 
-The `vote` app will be running at [http://localhost:5000](http://localhost:5000), and the `results` will be at [http://localhost:5001](http://localhost:5001).
+## 2. Change directory
 
-Alternately, if you want to run it on a [Docker Swarm](https://docs.docker.com/engine/swarm/), first make sure you have a swarm. If you don't, run:
-
-```shell
-docker swarm init
+```
+cd sample-voting-app
 ```
 
-Once you have your swarm, in this directory run:
+## 3. Let's target voting service.
 
-```shell
-docker stack deploy --compose-file docker-stack.yml vote
+```
+cd vote
 ```
 
-## Run the app in Kubernetes
+Change Dockerfile to the following
 
-The folder k8s-specifications contains the YAML specifications of the Voting App's services.
+```
+# Define a base stage that uses the official python runtime base image
+FROM python:3.11-slim AS base
 
-Run the following command to create the deployments and services. Note it will create these resources in your current namespace (`default` if you haven't changed it.)
+# Add curl for healthcheck
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/*
 
-```shell
-kubectl create -f k8s-specifications/
+# Set the application directory
+WORKDIR /usr/local/app
+
+# Install our requirements.txt
+COPY requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Define a log simulation script for simulating logs
+COPY simulate_logs.sh /usr/local/bin/simulate_logs.sh
+RUN chmod +x /usr/local/bin/simulate_logs.sh
+
+# Define a stage specifically for development, where it'll watch for
+# filesystem changes
+FROM base AS dev
+RUN pip install watchdog
+ENV FLASK_ENV=development
+
+# Run both the app and the log simulation script concurrently
+CMD ["sh", "-c", "/usr/local/bin/simulate_logs.sh & python app.py"]
+
+# Define the final stage that will bundle the application for production
+FROM base AS final
+
+# Copy our code from the current folder to the working directory inside the container
+COPY . .
+
+# Make port 80 available for links and/or publish
+EXPOSE 80
+
+# Run both gunicorn and the log simulation script concurrently
+CMD ["sh", "-c", "/usr/local/bin/simulate_logs.sh & gunicorn app:app -b 0.0.0.0:80 --log-file - --access-logfile - --workers 4 --keep-alive 0"]
 ```
 
-The `vote` web app is then available on port 31000 on each host of the cluster, the `result` web app is available on port 31001.
+4. Add Log Simulation Script:
 
-To remove them, run:
 
-```shell
-kubectl delete -f k8s-specifications/
+```
+#!/bin/bash
+
+while true; do
+  echo "$(date +'%Y-%m-%d %H:%M:%S') INFO: Simulated vote log message."
+  sleep 2
+done
 ```
 
-## Architecture
+5. Change directory
 
-![Architecture diagram](architecture.excalidraw.png)
+```
+cd ../vote/
+```
+6. Convert docker compose to Kubernetes
 
-* A front-end web app in [Python](/vote) which lets you vote between two options
-* A [Redis](https://hub.docker.com/_/redis/) which collects new votes
-* A [.NET](/worker/) worker which consumes votes and stores them in…
-* A [Postgres](https://hub.docker.com/_/postgres/) database backed by a Docker volume
-* A [Node.js](/result) web app which shows the results of the voting in real time
+```
+compose-bridge convert
+```
 
-## Notes
+7.
 
-The voting application only accepts one vote per client browser. It does not register additional votes if a vote has already been submitted from a client.
+```
+kubectl apply -k out/overlays/desktop/
+```
 
-This isn't an example of a properly architected perfectly designed distributed app... it's just a simple
-example of the various types of pieces and languages you might see (queues, persistent data, etc), and how to
-deal with them in Docker at a basic level.
+8. Check krs health > enter model name> Choose "example-voting-app" to see the logs (edited) (edited) 
+
