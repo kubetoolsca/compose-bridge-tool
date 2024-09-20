@@ -28,23 +28,18 @@ git clone https://github.com/kubetoolsca/sample-voting-app
 cd sample-voting-app
 ```
 
-## 3. Let's target voting service.
 
-```
-cd vote
-```
-
-## 4. Convert Compose to Kubernetes objects using Compose Bridge
+## 3. Convert Compose to Kubernetes objects using Compose Bridge
 
 ```
 compose-bridge convert
 ```
 
-## 5. Create Kubernetes objects
+## 4. Create Kubernetes objects
 
 ```
 kubectl apply -k out/overlays/desktop/
 ```
 
-## 6. Check krs health > enter model name> Choose "example-voting-app" to see the logs (edited) (edited) 
+## 5. Check krs health > enter model name> Choose "example-voting-app" to see the logs (edited) (edited) 
 
