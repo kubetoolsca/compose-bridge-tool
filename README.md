@@ -6,7 +6,13 @@ A simple distributed application running across multiple Docker containers.
 
 - Docker Desktop
 - Enable Compose Bridge
+
+
+  <img width="1319" alt="image" src="https://github.com/user-attachments/assets/9b8d5ce2-1836-455f-8e68-956cdbab2287">
+
 - Enable Kubernetes
+
+  
 
 ## Getting Started
 
