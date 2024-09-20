@@ -80,5 +80,5 @@ compose-bridge convert
 kubectl apply -k out/overlays/desktop/
 ```
 
-## 5. Check krs health > enter model name> Choose "example-voting-app" to see the logs (edited) (edited) 
+## 5. Check krs health > enter model name> Choose "sample-voting-app" to see the logs (edited) (edited) 
 
