@@ -1,17 +1,45 @@
 #!/bin/bash
 
-while true; do
-  # Generate a random number between 1 and 10
-  random_number=$(( (RANDOM % 10) + 1 ))
+# Simulated user vote data
+candidates=("Candidate_A" "Candidate_B" "Candidate_C")
+users=("user1" "user2" "user3" "user4" "user5")
 
-  # If the random number is 1 (10% chance), print an ERROR message
-  if [ $random_number -eq 1 ]; then
-    echo "$(date +'%Y-%m-%d %H:%M:%S') ERROR: Simulated vote error occurred."
+# Function to simulate voting logs
+log_vote() {
+  user=${users[$((RANDOM % ${#users[@]}))]}
+  candidate=${candidates[$((RANDOM % ${#candidates[@]}))]}
+  echo "$(date +'%Y-%m-%d %H:%M:%S') INFO: User '$user' voted for '$candidate'."
+}
+
+# Function to simulate a warning log
+log_warning() {
+  echo "$(date +'%Y-%m-%d %H:%M:%S') WARNING: Slow response detected from Redis."
+}
+
+# Function to simulate an error log
+log_error() {
+  error_type=$((RANDOM % 3))
+  case $error_type in
+    0) echo "$(date +'%Y-%m-%d %H:%M:%S') ERROR: Failed to connect to the database." ;;
+    1) echo "$(date +'%Y-%m-%d %H:%M:%S') ERROR: Invalid vote data received from user." ;;
+    2) echo "$(date +'%Y-%m-%d %H:%M:%S') ERROR: Redis service unavailable." ;;
+  esac
+}
+
+# Main loop to generate logs
+while true; do
+  # Generate a random number to determine log type
+  log_type=$((RANDOM % 10))
+
+  # Simulate different log types
+  if [ $log_type -lt 6 ]; then
+    log_vote  # INFO: Normal vote log
+  elif [ $log_type -lt 8 ]; then
+    log_warning  # WARNING: Slow Redis or other issues
   else
-    # Otherwise, print an INFO message
-    echo "$(date +'%Y-%m-%d %H:%M:%S') INFO: Simulated vote log message."
+    log_error  # ERROR: Random application error
   fi
 
-  # Sleep for 2 seconds before generating the next log
+  # Sleep for a short interval before generating the next log
   sleep 2
 done
