@@ -68,7 +68,6 @@ Kubernetes resource kustomization.yaml created
 ```
 
 
-
 ## 3. Convert Compose to Kubernetes objects using Compose Bridge
 
 ```
